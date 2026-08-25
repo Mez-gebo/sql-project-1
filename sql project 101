@@ -1,0 +1,553 @@
+   
+ /* Enhancing Online Sports Retail Revenu
+    ____________________________________ 
+	 
+    Objective: Analyze product data for an online sports retail company to enhance profits.
+
+    In this project different techniques like aggregation, cleaning, labeling and CTE are applied on
+    various data set such as numeric, string, and timestamp on pricing and revenue, ratings, reviews, 
+	  descriptions, website traffic. */
+	 
+/* .schema
+
+CREATE TABLE "brands"( 
+         "product_id" TEXT, 
+         "brand" TEXT, 
+         PRIMARY KEY("product_id"));
+		
+CREATE TABLE "finance"( 
+        "product_id" TEXT, 
+        "listing_price" REAL DEFAULT 0.0, 
+        "sale_price" REAL DEFAULT 0.0, 
+        "discount" REAL DEFAULT 0.0, 
+        "revenue" REAL DEFAULT 0.0, 
+        PRIMARY KEY("product_id"));
+		
+CREATE TABLE "reviews" (
+         "product_id" TEXT,
+         "rating" REAL DEFAULT 0.0,
+         "reviews" REAL DEFAULT 0.0,
+         PRIMARY KEY("product_id"));
+		
+CREATE TABLE "traffic"(
+         "product_id" TEXT,
+         "last_visited" TEXT,
+         PRIMARY KEY("product_id"));
+		
+CREATE TABLE "info"(
+         "product_name" TEXT,
+         "product_id" TEXT,
+         "description" TEXT,
+         PRIMARY KEY("product_id"));
+
+After creating the tables, we shall import the -csv- data to the tables which will have features 
+given below.
+
+SELECT * FROM brands
+LIMIT 5;
+
+╭────────────┬────────╮
+│ product_id │ brand  │
+╞════════════╪════════╡
+│ AH2430     │ NULL   │
+│ G27341     │ Adidas │
+│ CM0081     │ Adidas │
+│ B44832     │ Adidas │
+│ D98205     │ Adidas │
+╰────────────┴────────╯
+
+SELECT * FROM finance
+LIMIT 5;
+
+╭────────────┬───────────────┬────────────┬──────────┬─────────╮
+│ product_id │ listing_price │ sale_price │ discount │ revenue │
+╞════════════╪═══════════════╪════════════╪══════════╪═════════╡
+│ AH2430     │ NULL          │ NULL       │ NULL     │         │
+│ G27341     │         75.99 │      37.99 │      0.5 │ 1641.17 │
+│ CM0081     │          9.99 │       5.99 │      0.4 │  398.93 │
+│ B44832     │         69.99 │      34.99 │      0.5 │ 2204.37 │
+│ D98205     │         79.99 │      39.99 │      0.5 │  5182.7 │
+╰────────────┴───────────────┴────────────┴──────────┴─────────╯
+		
+ SELECT * FROM info
+ LIMIT 5;
+ 
+╭────────────────────────────────────────────────┬──────────┬──────────────────────────────────────────────────────────────────────────────────╮
+│                  product_name                  │product_id│                                   description                                    │
+╞════════════════════════════════════════════════╪══════════╪══════════════════════════════════════════════════════════════════════════════════╡
+│NULL                                            │AH2430    │NULL                                                                              │
+├────────────────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────────────────────────────────┤
+│Women's adidas Originals Sleek Shoes            │G27341    │A modern take on adidas sport heritage, tailored just for women. Perforated       │
+│                                                │          │3-Stripes on the leather upper of these shoes offer a sleek look that mirrors     │
+│                                                │          │iconic tennis styles.                                                             │
+├────────────────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────────────────────────────────┤
+│Women's adidas Swim Puka Slippers               │CM0081    │These adidas Puka slippers for women's come with slim straps for a great fit.     │
+│                                                │          │Feature performance logo on the footbed and textured Rubber outsole that gives    │
+│                                                │          │unique comfort.                                                                   │
+├────────────────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────────────────────────────────┤
+│Women's adidas Sport Inspired Questar Ride Shoes│B44832    │Inspired by modern tech runners, these women's shoes step out with unexpected     │
+│                                                │          │style. They're built with a breathable knit upper, while the heel offers the extra│
+│                                                │          │support of an Achilles-hugging design. The cushioned midsole provides a soft      │
+│                                                │          │landing with every stride.                                                        │
+├────────────────────────────────────────────────┼──────────┼──────────────────────────────────────────────────────────────────────────────────┤
+│Women's adidas Originals Taekwondo Shoes        │D98205    │This design is inspired by vintage Taekwondo styles originally worn to perfect    │
+│                                                │          │high kicks and rapid foot strikes. The canvas shoes make a streetwear fashion     │
+│                                                │          │statement as a chic, foot-hugging slip-on. They're shaped for a narrow,           │
+│                                                │          │women's-specific fit and ride on a soft gum rubber outsole.                       │
+╰────────────────────────────────────────────────┴──────────┴──────────────────────────────────────────────────────────────────────────────────╯
+
+ SELECT * FROM reviews
+ LIMIT 5;
+ 
+╭────────────┬────────┬─────────╮
+│ product_id │ rating │ reviews │
+╞════════════╪════════╪═════════╡
+│ AH2430     │ NULL   │ NULL    │
+│ G27341     │    3.3 │    24.0 │
+│ CM0081     │    2.6 │    37.0 │
+│ B44832     │    4.1 │    35.0 │
+│ D98205     │    3.5 │    72.0 │
+╰────────────┴────────┴─────────╯
+
+ SELECT * FROM traffic
+ LIMIT 5;
+ 
+╭────────────┬─────────────────────╮
+│ product_id │    last_visited     │
+╞════════════╪═════════════════════╡
+│ AH2430     │ 2018-05-19 15:13:00 │
+│ G27341     │ 2018-11-29 16:16:00 │
+│ CM0081     │ 2018-02-01 10:27:00 │
+│ B44832     │ 2018-09-07 20:06:00 │
+│ D98205     │ 2019-07-18 15:26:00 │
+╰────────────┴─────────────────────╯
+
+*/
+		
+
+ /* 1. Count the total number of products, along with the number of non-missing values in description, 
+      listing_price, and last_visited. */
+
+	 -- SOLUTION --
+
+SELECT  COUNT(*) AS "total_num_of_products",
+	    	SUM (CASE WHEN info.description IS NOT NULL THEN 1
+                  ELSE 0 END) AS "count_description",
+        SUM (CASE WHEN finance.listing_price IS NOT NULL THEN 1
+                  ELSE 0 END) AS "count_listingPrice",
+		    SUM (CASE WHEN traffic.last_visited IS NOT NULL THEN 1
+                  ELSE 0 END) AS "count_lastVisited"
+FROM info
+JOIN finance
+	 ON info.product_id = finance.product_id
+JOIN traffic
+	 ON info.product_id = traffic.product_id;
+	
+
+/*	 -- RESULT --
+
+╭───────────────────┬─────────────────┬──────────────────┬─────────────────╮
+│ total_num_of_prod │count_description│count_listingPrice│count_lastVisited│
+│        ...        │                 │                  │                 │
+╞═══════════════════╪═════════════════╪══════════════════╪═════════════════╡
+│               3179│             3117│              3120│             2928│
+╰───────────────────┴─────────────────┴──────────────────┴─────────────────╯	 
+
+
+A breakdown of the data revealed the following points:
+
+. The total number of products is 3,179.
+. Description: the non-missing value for this column is 3,117 out of 3,179. 
+               Only 62 products are missing description, which is 1.95% of 
+			   the dataset luck description. This field is completed.
+. Listing price: 3,120 products have a listing price. Meaning: 59 products 
+                 or 1.86% are missing this information. We can say it is highly complete field.
+. Last visited: 251 products are missing a recorded last visited date, 
+                this is the least complete of the three fields.
+. Overall, the dataset has good completeness, with all three fields having 92% non-missing values. 
+  Yet, the last_visited requires attention. */
+
+
+
+ -- 2. Find out how listing_price varies between Adidas and Nike products.
+ 
+	 -- SOLUTION --
+
+SELECT brands.brand,
+       finance.listing_price,
+       COUNT(finance.listing_price) AS "count_listingPrice"
+FROM brands
+JOIN finance ON brands.product_id = finance.product_id
+WHERE finance.listing_price > 0.0
+  AND finance.listing_price IS NOT NULL
+  AND brands.brand IS NOT NULL
+GROUP BY brands.brand, finance.listing_price
+ORDER BY brands.brand, finance.listing_price;
+
+
+/*	 -- RESULT --
+
+╭────────┬───────────────┬────────────────────╮
+│ brand  │ listing_price │ count_listingPrice │
+╞════════╪═══════════════╪════════════════════╡
+│ Adidas │          8.99 │                  1 │
+│ Adidas │          9.99 │                 11 │
+│ Adidas │         11.99 │                  1 │
+│ Adidas │         12.99 │                 27 │
+│ Adidas │         14.99 │                 27 │
+│ Adidas │         15.99 │                  4 │
+│ Adidas │         17.99 │                  4 │
+│ Adidas │         19.99 │                  8 │
+│ Adidas │         22.99 │                  1 │
+│ Adidas │         24.99 │                 28 │
+│ Adidas │         26.99 │                 18 │
+│ Adidas │         27.99 │                 38 │
+│ Adidas │         29.99 │                 37 │
+│ Adidas │         32.99 │                 24 │
+│ Adidas │         35.99 │                 25 │
+│ Adidas │         37.99 │                 24 │
+│ Adidas │         39.99 │                 81 │
+│ Adidas │         42.99 │                 51 │
+│ Adidas │         44.99 │                  1 │
+│ Adidas │         45.99 │                163 │
+│ Adidas │         47.99 │                 42 │
+│ Adidas │         49.99 │                183 │
+│ Adidas │         52.99 │                 43 │
+│ Adidas │         54.99 │                  2 │
+│ Adidas │         55.99 │                174 │
+│ Adidas │         59.99 │                211 │
+│ Adidas │         62.99 │                  1 │
+│ Adidas │         65.99 │                102 │
+│ Adidas │         69.99 │                 87 │
+│ Adidas │         74.99 │                  1 │
+│ Adidas │         75.99 │                149 │
+│ Adidas │         79.99 │                322 │
+│ Adidas │         84.99 │                  1 │
+│ Adidas │         85.99 │                  7 │
+│ Adidas │         89.99 │                 89 │
+│ Adidas │         95.99 │                  2 │
+│ Adidas │         99.99 │                 72 │
+│ Adidas │        109.99 │                 91 │
+│ Adidas │        119.99 │                115 │
+│ Adidas │        129.99 │                 96 │
+│ Adidas │        139.99 │                 36 │
+│ Adidas │        149.99 │                 41 │
+│ Adidas │        159.99 │                 28 │
+│ Adidas │        169.99 │                 27 │
+│ Adidas │        179.99 │                 34 │
+│ Adidas │        189.99 │                  7 │
+│ Adidas │        199.99 │                  8 │
+│ Adidas │        219.99 │                 11 │
+│ Adidas │        229.99 │                  8 │
+│ Adidas │        239.99 │                  5 │
+│ Adidas │        279.99 │                  4 │
+│ Adidas │        299.99 │                  2 │
+│ Nike   │         29.95 │                  2 │
+│ Nike   │         39.95 │                  1 │
+│ Nike   │         44.95 │                  3 │
+│ Nike   │         47.95 │                  1 │
+│ Nike   │         49.95 │                  5 │
+│ Nike   │         59.95 │                  2 │
+│ Nike   │         64.95 │                  1 │
+│ Nike   │         69.95 │                  4 │
+│ Nike   │         74.95 │                  7 │
+│ Nike   │         78.95 │                  1 │
+│ Nike   │         79.95 │                 16 │
+│ Nike   │         84.95 │                  5 │
+│ Nike   │         89.95 │                 13 │
+│ Nike   │         94.95 │                  1 │
+│ Nike   │         99.95 │                 14 │
+│ Nike   │        109.95 │                 17 │
+│ Nike   │        119.95 │                 16 │
+│ Nike   │        129.95 │                 12 │
+│ Nike   │        139.95 │                 12 │
+│ Nike   │        149.95 │                  6 │
+│ Nike   │        159.95 │                 31 │
+│ Nike   │        169.95 │                 14 │
+│ Nike   │        179.95 │                  4 │
+│ Nike   │        189.95 │                  2 │
+│ Nike   │        199.95 │                  1 │
+╰────────┴───────────────┴────────────────────╯
+
+
+The results show Adidas has a much wider range of listing price than Nike because,
+. Adidas: prices range from $8.99 to $129.99 where most products are concentrated 
+          mainly in the $39.99 - %129.99 range. Common prices are $79.99 having 322 products,
+          $59.99 (211 products), $49.99(183 products), and $55.99 (174 products).
+. Nike: prices range from $29.95 to $199.95. It has fewer products on each price, 
+        with the highest frequency occurring at $159.95 (31 products), $109.95 (17 products), 
+		$119.95 (16 products), and $79.95 (16 products).
+To conclude, the data suggests that Adidas offers greater price range than Nike in this dataset. */
+
+
+   
+ -- 3. Create labels  for products grouped by price range and brand.
+
+	 -- SOLUTION --
+
+SELECT brands.brand,
+       COUNT(finance.listing_price) AS "count_listingPrice", 
+       CASE WHEN finance.listing_price <= 50.00 THEN 'Affordable'
+            WHEN finance.listing_price <= 100.00 AND finance.listing_price > 50.00 THEN 'Average'
+            WHEN finance.listing_price <= 150.00 AND finance.listing_price > 100.00 THEN 'Expensive'
+            ELSE 'Exclusive'
+	     END AS "label"
+FROM brands
+JOIN finance
+   ON brands.product_id = finance.product_id
+WHERE brands.brand IS NOT NULL
+  AND finance.listing_price IS NOT NULL
+GROUP BY brands.brand, label
+ORDER BY brands.brand, count_listingPrice DESC;
+   
+   
+/*	 -- RESULT --
+	 
+╭────────┬────────────────────┬────────────╮
+│ brand  │ count_listingPrice │   label    │
+╞════════╪════════════════════╪════════════╡
+│ Adidas │               1263 │ Average    │
+│ Adidas │                799 │ Affordable │
+│ Adidas │                379 │ Expensive  │
+│ Adidas │                134 │ Exclusive  │
+│ Nike   │                366 │ Affordable │
+│ Nike   │                 64 │ Average    │
+│ Nike   │                 63 │ Expensive  │
+│ Nike   │                 52 │ Exclusive  │
+╰────────┴────────────────────┴────────────╯
+
+
+The results show how the products are distributed among four categories which is based
+on their price range: 'Affordable', 'Average', 'Expensive', and 'Exclusive'.
+. Adidas: most Adidas products fall into the 'Average' price category that has 1263 
+          products, followed by 'Affordable' items with 799 products, 379 'Expensive' 
+		  products and 134 'Exclusive'.
+		  
+. Nike: 'Affordable' is the largest category of Nike with 366 products. Next is 
+        'Average' which accounts for 64 products, then 63 'Expensive' products and 52 
+	    items under 'Exclusive' category. This indicates fewer Nike products 
+	    fall into the higher-priced categories.
+
+. Conclusion: Adidas has more diverse product range with the majority of its products
+             concentrated in the 'Average' and 'Affordable' categories. Yet, Nike's
+			 products are heavily concentrated in the Affordable category. */
+
+
+
+ --4. Calculate the average discount offered by brand
+
+	 -- SOLUTION --
+
+SELECT brands.brand,
+       ROUND(AVG(finance.discount), 2) AS "average_discount"
+FROM brands
+JOIN finance 
+   ON brands.product_id = finance.product_id
+WHERE brands.brand IS NOT NULL 
+  AND finance.discount IS NOT NULL
+GROUP BY brands.brand
+ORDER BY average_discount;
+   
+   
+/*	 --RESULT --
+	 
+╭────────┬──────────────────╮
+│ brand  │ average_discount │
+╞════════╪══════════════════╡
+│ Nike   │              0.0 │
+│ Adidas │             0.33 │
+╰────────┴──────────────────
+
+
+From the results we can conclude that Adidas offers significantly higher discount 
+than Nike. This is because:
+ . Nike: The average discount is 0.00, which indicates Nike products in this dataset 
+         have no discount.
+ . Adidas: The average discount is 0.33, meaning Adidas offers an average discount
+           of around 33%. */
+
+
+
+ /* 5. Split description into bins in increments of one hundred characters, and calculate 
+      average rating for each bin. */
+
+	 -- SOLUTION --
+
+SELECT ((length(info.description) / 100) * 100) || '-' || 
+       (((length(info.description) / 100) * 100) + 99) AS "description_length", 
+       ROUND(AVG(reviews.rating), 2) AS "avg_rating"
+FROM info
+JOIN reviews 
+   ON info.product_id = reviews.product_id
+WHERE info.description IS NOT NULL 
+  AND reviews.rating IS NOT NULL
+GROUP BY description_length
+ORDER BY description_length;
+
+
+/*	 -- RESULT --
+	 
+╭────────────────────┬────────────╮
+│ description_length │ avg_rating │
+╞════════════════════╪════════════╡
+│ 0-99               │       1.87 │
+│ 100-199            │       3.21 │
+│ 200-299            │       3.27 │
+│ 300-399            │       3.29 │
+│ 400-499            │       3.32 │
+│ 500-599            │       3.12 │
+│ 600-699            │       3.65 │
+╰────────────────────┴────────────╯
+
+
+From the results we can say very short descriptions (0-99 characters) are related 
+with substantially lower ratings which is 1.87. From 100-499 characters, the average 
+rating gradually increases from 3.21 to 3.32. Then the 'avg-rating' drops noticeably
+to 3.12 where the description length is between 500 and 599. Eventually, products
+with description length range between 600 and 699 have the highest average rating, 3.65. 
+From this we can make a general conclusion: there appears to be a positive relationship
+between description length and average product rating. However, the relationship 
+is not consistently increasing. */
+
+
+
+ -- 6. Count the number of reviews per brand per month.
+
+	 --SOLUTION --
+
+SELECT brands.brand,
+       strftime('%m', traffic.last_visited) AS "month",
+       COUNT(reviews.reviews) AS "count_reviews"
+FROM brands
+JOIN traffic 
+   ON brands.product_id = traffic.product_id
+JOIN reviews 
+   ON brands.product_id = reviews.product_id
+WHERE brands.brand IS NOT NULL 
+  AND month IS NOT NULL 
+  AND reviews.reviews IS NOT NULL
+GROUP BY brands.brand, month
+ORDER BY brands.brand, month;
+
+
+/*	 -- RESULT --
+	 
+╭────────┬───────┬──────────────────────╮
+│ brand  │ month │ count_reviews │
+╞════════╪═══════╪══════════════════════╡
+│ Adidas │ '01'  │                  253 │
+│ Adidas │ '02'  │                  272 │
+│ Adidas │ '03'  │                  269 │
+│ Adidas │ '04'  │                  180 │
+│ Adidas │ '05'  │                  172 │
+│ Adidas │ '06'  │                  159 │
+│ Adidas │ '07'  │                  170 │
+│ Adidas │ '08'  │                  189 │
+│ Adidas │ '09'  │                  181 │
+│ Adidas │ '10'  │                  192 │
+│ Adidas │ '11'  │                  150 │
+│ Adidas │ '12'  │                  190 │
+│ Nike   │ '01'  │                   52 │
+│ Nike   │ '02'  │                   52 │
+│ Nike   │ '03'  │                   55 │
+│ Nike   │ '04'  │                   42 │
+│ Nike   │ '05'  │                   41 │
+│ Nike   │ '06'  │                   43 │
+│ Nike   │ '07'  │                   37 │
+│ Nike   │ '08'  │                   29 │
+│ Nike   │ '09'  │                   28 │
+│ Nike   │ '10'  │                   47 │
+│ Nike   │ '11'  │                   38 │
+│ Nike   │ '12'  │                   35 │
+╰────────┴───────┴──────────────────────╯
+
+
+. Adidas: ranges from 150 to 272 reviews. The highest number of reviews for Adidas 
+happens in Feburary(272), followed closely by March (269 reviews) and January with 
+253 reviews. Then after March, the count generally declines and November accounts 
+for the lowest review in the year, 150.
+
+. Nike starts strongly: January and Feburary (52),the highest number of reviews 
+occurs in March which is 55. Review counts then gradually drops. It falls 
+considerably through August and Sptember, before recovering in October, 47.
+
+Conclusion: both Adidas and Nike performs best early in the year, strong first quarter.  
+            However, Adidas generated considerably more review activity than Nike 
+			through out the year. */
+
+
+
+ --7. Create the footwear CTE, then calculate the number of products and median revenue from these items.
+
+	 -- SOLUTION --
+				
+WITH footwear AS ( 
+    SELECT info.description,
+           finance.revenue
+    FROM info
+    JOIN finance 
+       ON info.product_id = finance.product_id
+    WHERE info.description IS NOT NULL
+      AND (
+           info.description LIKE '%shoe%'
+           OR info.description LIKE '%foot%'
+           OR info.description LIKE '%trainer%' 
+          )
+)
+SELECT COUNT(*) AS "total_num_of_footgear",
+       MEDIAN(revenue) AS "revenue_median"
+FROM footwear
+WHERE revenue IS NOT NULL;
+
+
+/*	-- RESULT --
+					
+╭──────────────────────┬────────────────╮
+│ total_num_of_foot... │ revenue_median │
+╞══════════════════════╪════════════════╡
+│                 2700 │        3121.02 │
+╰──────────────────────┴────────────────╯
+
+
+Conclusion: the result indicates that the footwear category contains significant 
+number of products from the entire dataset, 2700. Half of these products generate a revenue of 3121.02 and above
+and the rest half have revenue below this value. */
+
+
+
+--8. Copy the code used to create footwear then use a filter to return only products that are not in the CTE.
+ 
+	 -- SOLUTION --
+  
+WITH footwear AS (
+    SELECT info.description,
+           finance.revenue
+    FROM info
+    JOIN finance
+     	 ON info.product_id = finance.product_id
+    WHERE info.description IS NOT NULL
+      AND (
+            info.description LIKE '%shoe%'
+            OR info.description LIKE '%foot%'
+            OR info.description LIKE '%trainer%' 
+          )
+)
+SELECT COUNT(*) AS "total_num_of_non_footwear",
+       MEDIAN(finance.revenue) AS "non_footwear_median_revenue"
+FROM info
+JOIN finance ON info.product_id = finance.product_id
+WHERE info.description NOT IN (SELECT description FROM footwear);
+						
+						
+/*	 -- RESULT --
+			
+╭──────────────────────┬──────────────────────╮
+│ total_num_of_non_... │ non_footwear_medi... │
+╞══════════════════════╪══════════════════════╡
+│                  417 │               503.82 │
+╰──────────────────────┴──────────────────────╯
+
+
+The result indicates that 417 non-footwear records have a median revenue of 503.82. 
+Meaning, half of these products have revenue above 503.82 and the rest have revenue 
+below it. */

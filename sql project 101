@@ -131,12 +131,9 @@ LIMIT 5;
 	 -- SOLUTION --
 
 SELECT  COUNT(*) AS "total_num_of_products",
-	    	SUM (CASE WHEN info.description IS NOT NULL THEN 1
-                  ELSE 0 END) AS "count_description",
-        SUM (CASE WHEN finance.listing_price IS NOT NULL THEN 1
-                  ELSE 0 END) AS "count_listingPrice",
-		    SUM (CASE WHEN traffic.last_visited IS NOT NULL THEN 1
-                  ELSE 0 END) AS "count_lastVisited"
+	    SUM (CASE WHEN info.description IS NOT NULL THEN 1 ELSE 0 END) AS "count_description",
+        SUM (CASE WHEN finance.listing_price IS NOT NULL THEN 1 ELSE 0 END) AS "count_listingPrice",
+		SUM (CASE WHEN traffic.last_visited IS NOT NULL THEN 1 ELSE 0 END) AS "count_lastVisited"
 FROM info
 JOIN finance
 	 ON info.product_id = finance.product_id
@@ -291,7 +288,7 @@ SELECT brands.brand,
             WHEN finance.listing_price <= 100.00 AND finance.listing_price > 50.00 THEN 'Average'
             WHEN finance.listing_price <= 150.00 AND finance.listing_price > 100.00 THEN 'Expensive'
             ELSE 'Exclusive'
-	     END AS "label"
+	   END AS "label"
 FROM brands
 JOIN finance
    ON brands.product_id = finance.product_id
